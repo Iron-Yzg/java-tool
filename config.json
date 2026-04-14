@@ -1,0 +1,25 @@
+{
+    "project_module": "/Users/yangzhenguo/workspace_lysz/lysz-media-publish-server/lysz-api",
+    "base_package": "com.lysztech",
+    "base_entity_name": "BaseEntity",
+    "base_entity_package": "common.entity",
+    "request_prefix": "",
+    "packages": {
+        "entity": "repository.entity",
+        "mapper": "repository.mapper",
+        "service": "repository.service",
+        "service_impl": "repository.service.impl",
+        "controller": "controller",
+        "dto": "dto",
+        "vo": "vo"
+    },
+    "overwrite_existing": false,
+    "ignore_fields": [
+        "id",
+        "remark",
+        "create_user_id",
+        "create_time",
+        "update_user_id",
+        "update_time"
+    ]
+}
