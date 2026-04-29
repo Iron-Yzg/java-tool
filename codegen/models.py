@@ -36,6 +36,10 @@ class GeneratorConfig:
         return f"{self.base_package}.{self.base_entity_package}"
 
     @property
+    def should_merge_service(self) -> bool:
+        return self.service_impl_package == self.service_package
+
+    @property
     def should_generate_base_entity(self) -> bool:
         return not self.base_entity_full_package_override
 

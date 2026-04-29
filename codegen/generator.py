@@ -101,21 +101,24 @@ class JavaCodeGenerator:
     def generate_table_files(self, table: TableDefinition) -> list[Path]:
         generated: list[Path] = []
         package_root = self.layout.package_root_dir
-        file_map = {
+
+        # Determine service impl output path and filename
+        if self.config.should_merge_service:
+            service_impl_dir = package_root / package_to_path(self.config.service_package)
+            service_impl_filename = f"{table.class_name}Service.java"
+        else:
+            service_impl_dir = package_root / package_to_path(self.config.service_impl_package)
+            service_impl_filename = f"{table.class_name}ServiceImpl.java"
+
+        file_map: dict[Path, str] = {
             package_root
             / package_to_path(self.config.entity_package)
             / f"{table.class_name}.java": render_entity(self.config, table),
             package_root
             / package_to_path(self.config.mapper_package)
             / f"{table.class_name}Mapper.java": render_mapper(self.config, table),
-            package_root
-            / package_to_path(self.config.service_package)
-            / f"{table.class_name}Service.java": render_service_interface(
-                self.config, table
-            ),
-            package_root
-            / package_to_path(self.config.service_impl_package)
-            / f"{table.class_name}ServiceImpl.java": render_service_impl(
+            service_impl_dir
+            / service_impl_filename: render_service_impl(
                 self.config, table
             ),
             package_root
@@ -142,6 +145,14 @@ class JavaCodeGenerator:
             / package_to_path(self.config.vo_package)
             / f"{table.class_name}VO.java": render_vo(self.config, table),
         }
+
+        # Only generate service interface when not merged
+        if not self.config.should_merge_service:
+            file_map[
+                package_root
+                / package_to_path(self.config.service_package)
+                / f"{table.class_name}Service.java"
+            ] = render_service_interface(self.config, table)
 
         for path, content in file_map.items():
             written = self.write_file(

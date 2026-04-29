@@ -1,5 +1,5 @@
 {
-    "project_module": "//Users/yangzhenguo/workspace_lysz/lysz-auth/lysz-auth-api",
+    "project_module": "/Users/yangzhenguo/workspace/java-tool/lysz-auth-api",
     "base_package": "com.lysztech.auth",
     "base_entity_name": "BaseEntity",
     "base_entity_package": "common.entity",
@@ -9,7 +9,7 @@
         "entity": "entity",
         "mapper": "mapper",
         "service": "service",
-        "service_impl": "service.impl",
+        "service_impl": "service",
         "controller": "controller",
         "dto": "dto",
         "vo": "vo"

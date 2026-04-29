@@ -29,13 +29,26 @@ def render_update_dto(config: GeneratorConfig, table: TableDefinition) -> str:
     )
 
 
-def render_page_query_dto(config: GeneratorConfig, table: TableDefinition) -> str:
-    columns = list(visible_columns(table, config))
-    primary_key = table.primary_key
-    if primary_key and primary_key.name in config.ignore_field_set:
-        columns = [primary_key, *columns]
+# Fields that should never appear in page query DTOs
+SKIP_QUERY_FIELDS = {
+    "id",
+    "create_time",
+    "update_time",
+    "create_by",
+    "create_user_id",
+    "update_by",
+    "update_user_id",
+    "delete_by",
+    "delete_time",
+    "is_deleted",
+    "remark",
+}
 
-    imports = {"lombok.Data"}
+
+def render_page_query_dto(config: GeneratorConfig, table: TableDefinition) -> str:
+    columns = queryable_columns(table, config)
+
+    imports = {"lombok.Data", "com.lysztech.mybatis.page.PageQuery"}
     for column in unique_columns(columns):
         java_import = JAVA_TYPE_IMPORTS.get(column.java_type)
         if java_import:
@@ -48,13 +61,7 @@ def render_page_query_dto(config: GeneratorConfig, table: TableDefinition) -> st
         "",
         f"/** {table.comment or table.class_name}分页查询参数 */",
         "@Data",
-        f"public class {table.class_name}PageQueryDTO {{",
-        "",
-        "    /** 页码 */",
-        "    private Long pageNum = 1L;",
-        "",
-        "    /** 每页条数 */",
-        "    private Long pageSize = 10L;",
+        f"public class {table.class_name}PageQueryDTO extends PageQuery {{",
     ]
 
     for column in unique_columns(columns):
@@ -62,6 +69,18 @@ def render_page_query_dto(config: GeneratorConfig, table: TableDefinition) -> st
 
     lines.extend(["", "}"])
     return "\n".join(lines)
+
+
+def queryable_columns(
+    table: TableDefinition, config: GeneratorConfig
+) -> list[ColumnDefinition]:
+    """Filter columns suitable for page query - exclude audit/system fields."""
+    return [
+        column
+        for column in table.columns
+        if column.name not in config.ignore_field_set
+        and column.name not in SKIP_QUERY_FIELDS
+    ]
 
 
 def render_data_class(
