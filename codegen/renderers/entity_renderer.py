@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from codegen.constants import JAVA_TYPE_IMPORTS
+from codegen.constants import JAVA_TYPE_IMPORTS, SQL_TYPE_TO_MYSQL
 from codegen.models import ColumnDefinition, GeneratorConfig, TableDefinition
 from codegen.utils import render_imports, snake_to_pascal
 
@@ -10,20 +10,13 @@ def render_entity(config: GeneratorConfig, table: TableDefinition) -> str:
         column for column in table.columns if column.name not in config.ignore_field_set
     ]
     imports = {
-        "com.baomidou.mybatisplus.annotation.TableField",
-        "com.baomidou.mybatisplus.annotation.TableName",
         f"{config.base_entity_full_package}.{config.base_entity_name}",
-        "java.io.Serial",
         "lombok.Data",
         "lombok.EqualsAndHashCode",
+        "org.dromara.autotable.annotation.mysql.MysqlTypeConstant",
+        "org.dromara.mpe.autotable.annotation.Column",
+        "org.dromara.mpe.autotable.annotation.Table",
     }
-    if any(column.primary_key for column in visible_columns):
-        imports.update(
-            {
-                "com.baomidou.mybatisplus.annotation.IdType",
-                "com.baomidou.mybatisplus.annotation.TableId",
-            }
-        )
     for column in visible_columns:
         java_import = JAVA_TYPE_IMPORTS.get(column.java_type)
         if java_import:
@@ -37,11 +30,8 @@ def render_entity(config: GeneratorConfig, table: TableDefinition) -> str:
         f"/** {table.comment or f'{table.class_name} entity'} */",
         "@Data",
         "@EqualsAndHashCode(callSuper = true)",
-        f'@TableName("{table.name}")',
+        f'@Table(value = "{escape_java_string(table.name)}", comment = "{escape_java_string(table.comment)}")',
         f"public class {table.class_name} extends {config.base_entity_name} {{",
-        "",
-        "    @Serial",
-        "    private static final long serialVersionUID = 1L;",
     ]
 
     for column in visible_columns:
@@ -52,11 +42,7 @@ def render_entity(config: GeneratorConfig, table: TableDefinition) -> str:
 
 
 def render_field(column: ColumnDefinition) -> str:
-    annotation = (
-        f'@TableId(value = "{column.name}", type = IdType.{"AUTO" if column.auto_increment else "INPUT"})'
-        if column.primary_key
-        else f'@TableField("{column.name}")'
-    )
+    annotation = render_column_annotation(column)
     comment = column.comment or snake_to_pascal(column.name)
     return "\n".join(
         [
@@ -65,3 +51,22 @@ def render_field(column: ColumnDefinition) -> str:
             f"    private {column.java_type} {column.field_name};",
         ]
     )
+
+
+def render_column_annotation(column: ColumnDefinition) -> str:
+    sql_type = column.sql_type.split("(", 1)[0].lower()
+    mysql_type = SQL_TYPE_TO_MYSQL.get(sql_type, "VARCHAR")
+    parts = [f"type = MysqlTypeConstant.{mysql_type}"]
+    if column.length and sql_type in {"char", "varchar"}:
+        parts.append(f"length = {column.length}")
+    if not column.nullable:
+        parts.append("notNull = true")
+    if column.default_value is not None:
+        parts.append(f'defaultValue = "{escape_java_string(column.default_value)}"')
+    if column.comment:
+        parts.append(f'comment = "{escape_java_string(column.comment)}"')
+    return f"@Column({', '.join(parts)})"
+
+
+def escape_java_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')

@@ -11,6 +11,7 @@ def render_create_dto(config: GeneratorConfig, table: TableDefinition) -> str:
         class_name=f"{table.class_name}CreateDTO",
         class_comment=f"{table.comment or table.class_name}新增参数",
         columns=visible_columns(table, config),
+        mapper_target=f"{config.base_package}.{config.entity_package}.{table.class_name}",
     )
 
 
@@ -24,6 +25,7 @@ def render_update_dto(config: GeneratorConfig, table: TableDefinition) -> str:
         class_name=f"{table.class_name}UpdateDTO",
         class_comment=f"{table.comment or table.class_name}更新参数",
         columns=unique_columns(columns),
+        mapper_target=f"{config.base_package}.{config.entity_package}.{table.class_name}",
     )
 
 
@@ -67,8 +69,12 @@ def render_data_class(
     class_name: str,
     class_comment: str,
     columns: list[ColumnDefinition],
+    mapper_target: str | None = None,
 ) -> str:
     imports = {"lombok.Data"}
+    if mapper_target:
+        imports.add("io.github.linpeilie.annotations.AutoMapper")
+        imports.add(mapper_target)
     for column in columns:
         java_import = JAVA_TYPE_IMPORTS.get(column.java_type)
         if java_import:
@@ -81,6 +87,13 @@ def render_data_class(
         "",
         f"/** {class_comment} */",
         "@Data",
+        *(
+            [
+                f"@AutoMapper(target = {mapper_target.rsplit('.', 1)[1]}.class, reverseConvertGenerate = false)"
+            ]
+            if mapper_target
+            else []
+        ),
         f"public class {class_name} {{",
     ]
 

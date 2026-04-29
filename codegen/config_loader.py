@@ -37,6 +37,9 @@ def load_config(config_path: Path) -> GeneratorConfig:
             data.get("base_entity_package", "common.entity")
         ).strip()
         or "common.entity",
+        base_entity_full_package_override=str(
+            data.get("base_entity_full_package", "")
+        ).strip(),
         request_prefix=normalize_request_prefix(
             str(data.get("request_prefix", data.get("api_prefix", "")))
         ),

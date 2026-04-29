@@ -26,6 +26,34 @@ SQL_TYPE_TO_JAVA = {
     "varchar": "String",
 }
 
+SQL_TYPE_TO_MYSQL = {
+    "bigint": "BIGINT",
+    "binary": "BINARY",
+    "bit": "BIT",
+    "blob": "BLOB",
+    "bool": "TINYINT",
+    "boolean": "TINYINT",
+    "char": "CHAR",
+    "date": "DATE",
+    "datetime": "DATETIME",
+    "decimal": "DECIMAL",
+    "double": "DOUBLE",
+    "float": "FLOAT",
+    "int": "INT",
+    "integer": "INT",
+    "json": "JSON",
+    "longtext": "LONGTEXT",
+    "mediumint": "MEDIUMINT",
+    "mediumtext": "MEDIUMTEXT",
+    "numeric": "DECIMAL",
+    "smallint": "SMALLINT",
+    "text": "TEXT",
+    "time": "TIME",
+    "timestamp": "TIMESTAMP",
+    "tinyint": "TINYINT",
+    "varchar": "VARCHAR",
+}
+
 JAVA_TYPE_IMPORTS = {
     "BigDecimal": "java.math.BigDecimal",
     "LocalDate": "java.time.LocalDate",
@@ -37,11 +65,13 @@ DEFAULT_BASE_ENTITY_FIELDS = {
     "id": ("Long", "主键ID"),
     "remark": ("String", "备注"),
     "create_by": ("Long", "创建人ID"),
-    "create_time": ("Long", "创建时间"),
+    "create_time": ("LocalDateTime", "创建时间"),
+    "create_user_id": ("String", "创建人ID"),
     "update_by": ("Long", "更新人ID"),
-    "update_time": ("Long", "更新时间"),
+    "update_time": ("LocalDateTime", "更新时间"),
+    "update_user_id": ("String", "更新人ID"),
     "delete_by": ("Long", "删除人ID"),
-    "delete_time": ("Long", "删除时间"),
+    "delete_time": ("LocalDateTime", "删除时间"),
 }
 
 PACKAGE_KEYS = (

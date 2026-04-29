@@ -6,14 +6,11 @@ from codegen.utils import render_imports
 
 
 def render_vo(config: GeneratorConfig, table: TableDefinition) -> str:
-    visible_columns = [
-        column for column in table.columns if column.name not in config.ignore_field_set
-    ]
+    visible_columns = table.columns
     imports = {
-        f"{config.base_entity_full_package}.{config.base_entity_name}",
-        "java.io.Serial",
+        f"{config.base_package}.{config.entity_package}.{table.class_name}",
+        "io.github.linpeilie.annotations.AutoMapper",
         "lombok.Data",
-        "lombok.EqualsAndHashCode",
     }
     for column in visible_columns:
         java_import = JAVA_TYPE_IMPORTS.get(column.java_type)
@@ -27,11 +24,8 @@ def render_vo(config: GeneratorConfig, table: TableDefinition) -> str:
         "",
         f"/** {table.comment or table.class_name}返回对象 */",
         "@Data",
-        "@EqualsAndHashCode(callSuper = true)",
-        f"public class {table.class_name}VO extends {config.base_entity_name} {{",
-        "",
-        "    @Serial",
-        "    private static final long serialVersionUID = 1L;",
+        f"@AutoMapper(target = {table.class_name}.class)",
+        f"public class {table.class_name}VO {{",
     ]
 
     for column in visible_columns:

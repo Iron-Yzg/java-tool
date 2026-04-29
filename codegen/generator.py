@@ -56,6 +56,9 @@ class JavaCodeGenerator:
         return generated_files
 
     def generate_base_entity(self, tables: list[TableDefinition]) -> list[Path]:
+        if not self.config.should_generate_base_entity:
+            return []
+
         base_entity_path = (
             self.layout.java_src_dir
             / package_to_path(self.config.base_entity_full_package)
@@ -78,10 +81,11 @@ class JavaCodeGenerator:
                 )
                 column = ColumnDefinition(
                     name=field_name,
-                    sql_type="",
+                    sql_type=default_sql_type(field_name, java_type),
                     java_type=java_type,
                     comment=comment,
                     nullable=True,
+                    length=default_column_length(field_name),
                     primary_key=field_name == "id",
                     auto_increment=field_name == "id",
                 )
@@ -106,7 +110,7 @@ class JavaCodeGenerator:
             / f"{table.class_name}Mapper.java": render_mapper(self.config, table),
             package_root
             / package_to_path(self.config.service_package)
-            / f"I{table.class_name}Service.java": render_service_interface(
+            / f"{table.class_name}Service.java": render_service_interface(
                 self.config, table
             ),
             package_root
@@ -159,6 +163,24 @@ def resolve_sql_dir(config_path: Path, sql_dir: Path) -> Path:
     if sql_dir.is_absolute():
         return sql_dir
     return (config_path.parent / sql_dir).resolve()
+
+
+def default_sql_type(field_name: str, java_type: str) -> str:
+    if field_name == "id":
+        return "bigint"
+    if java_type == "LocalDateTime":
+        return "datetime"
+    if java_type == "Long":
+        return "bigint"
+    return "varchar(32)" if field_name.endswith("_id") else "varchar(255)"
+
+
+def default_column_length(field_name: str) -> int | None:
+    if field_name.endswith("_id"):
+        return 32
+    if field_name == "remark":
+        return 255
+    return None
 
 
 def build_argument_parser() -> argparse.ArgumentParser:

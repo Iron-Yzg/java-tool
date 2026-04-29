@@ -13,6 +13,7 @@ class GeneratorConfig:
     base_package: str
     base_entity_name: str = "BaseEntity"
     base_entity_package: str = "common.entity"
+    base_entity_full_package_override: str = ""
     request_prefix: str = ""
     ignore_fields: list[str] = field(default_factory=list)
     entity_package: str = "entity"
@@ -30,7 +31,13 @@ class GeneratorConfig:
 
     @property
     def base_entity_full_package(self) -> str:
+        if self.base_entity_full_package_override:
+            return self.base_entity_full_package_override
         return f"{self.base_package}.{self.base_entity_package}"
+
+    @property
+    def should_generate_base_entity(self) -> bool:
+        return not self.base_entity_full_package_override
 
 
 @dataclass
@@ -47,6 +54,8 @@ class ColumnDefinition:
     java_type: str
     comment: str
     nullable: bool
+    length: int | None = None
+    default_value: str | None = None
     primary_key: bool = False
     auto_increment: bool = False
 

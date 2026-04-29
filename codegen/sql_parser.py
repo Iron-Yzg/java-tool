@@ -60,6 +60,14 @@ def parse_columns(table_body: str) -> list[ColumnDefinition]:
         comment_match = re.search(
             r"COMMENT\s+'(?P<comment>(?:[^'\\]|\\.)*)'", extra, re.IGNORECASE
         )
+        default_match = re.search(
+            r"DEFAULT\s+(?P<value>NULL|'(?:[^'\\]|\\.)*'|[^\s,]+)",
+            extra,
+            re.IGNORECASE,
+        )
+        default_value = normalize_default_value(
+            default_match.group("value") if default_match else None
+        )
         columns.append(
             ColumnDefinition(
                 name=column_match.group("name"),
@@ -69,6 +77,8 @@ def parse_columns(table_body: str) -> list[ColumnDefinition]:
                 if comment_match
                 else "",
                 nullable="NOT NULL" not in upper_line,
+                length=parse_sql_length(column_match.group("sql_type")),
+                default_value=default_value,
                 primary_key="PRIMARY KEY" in upper_line,
                 auto_increment="AUTO_INCREMENT" in upper_line,
             )
@@ -82,3 +92,19 @@ def parse_columns(table_body: str) -> list[ColumnDefinition]:
 
 def sql_type_to_java_type(sql_type: str) -> str:
     return SQL_TYPE_TO_JAVA.get(sql_type.split("(", 1)[0].lower(), "String")
+
+
+def parse_sql_length(sql_type: str) -> int | None:
+    match = re.search(r"\((\d+)", sql_type)
+    return int(match.group(1)) if match else None
+
+
+def normalize_default_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if normalized.upper() == "NULL":
+        return None
+    if normalized.startswith("'") and normalized.endswith("'"):
+        return normalized[1:-1].replace("\\'", "'")
+    return normalized

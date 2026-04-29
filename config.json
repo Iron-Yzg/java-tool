@@ -1,14 +1,15 @@
 {
-    "project_module": "/Users/yangzhenguo/workspace_lysz/lysz-media-publish-server/lysz-api",
-    "base_package": "com.lysztech",
+    "project_module": "//Users/yangzhenguo/workspace_lysz/lysz-auth/lysz-auth-api",
+    "base_package": "com.lysztech.auth",
     "base_entity_name": "BaseEntity",
     "base_entity_package": "common.entity",
+    "base_entity_full_package": "com.lysztech.mybatis.entity",
     "request_prefix": "",
     "packages": {
-        "entity": "repository.entity",
-        "mapper": "repository.mapper",
-        "service": "repository.service",
-        "service_impl": "repository.service.impl",
+        "entity": "entity",
+        "mapper": "mapper",
+        "service": "service",
+        "service_impl": "service.impl",
         "controller": "controller",
         "dto": "dto",
         "vo": "vo"
